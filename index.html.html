@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grandma's Alarm Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8cc7a;
+    --gold-dark: #8b6914;
+    --cream: #f5efe0;
+    --mahogany: #4a1e0a;
+    --mahogany-light: #7a3a1a;
+    --mahogany-mid: #5c2a10;
+    --brass: #b5913a;
+    --shadow: rgba(30,10,0,0.7);
+    --ivory: #fdf8ed;
+    --rose: #c97a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(ellipse at 40% 30%, #2a1505 0%, #0e0804 60%, #050303 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Crimson Text', serif;
+    overflow: hidden;
+  }
+
+  /* Dust motes background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(201,168,76,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(201,168,76,0.03) 0%, transparent 40%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scene {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .clock-wrapper {
+    transform: rotateX(8deg) rotateY(-4deg);
+    transform-style: preserve-3d;
+    animation: gentle-sway 8s ease-in-out infinite;
+    filter: drop-shadow(0 40px 60px rgba(0,0,0,0.9));
+  }
+
+  @keyframes gentle-sway {
+    0%, 100% { transform: rotateX(8deg) rotateY(-4deg); }
+    50% { transform: rotateX(7deg) rotateY(-2deg); }
+  }
+
+  /* MAIN BODY */
+  .clock-body {
+    width: 280px;
+    height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  /* Front face */
+  .clock-front {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 30% 20%, var(--mahogany-light) 0%, var(--mahogany) 40%, #2a0e04 100%);
+    border-radius: 50% 50% 30% 30% / 20% 20% 15% 15%;
+    border: 3px solid var(--gold-dark);
+    box-shadow:
+      inset 2px 3px 8px rgba(255,220,120,0.15),
+      inset -2px -3px 10px rgba(0,0,0,0.5),
+      2px 0 0 var(--gold-dark),
+      -2px 0 0 rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  /* Wood grain texture */
+  .clock-front::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      170deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,0.06) 3px,
+      rgba(0,0,0,0.06) 4px,
+      transparent 4px,
+      transparent 9px,
+      rgba(255,180,80,0.04) 9px,
+      rgba(255,180,80,0.04) 10px
+    );
+    border-radius: inherit;
+  }
+
+  /* Sheen highlight on front */
+  .clock-front::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 40%;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,220,150,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* 3D side effect */
+  .clock-side-right {
+    position: absolute;
+    top: 8px; right: -18px;
+    width: 18px;
+    height: calc(100% - 16px);
+    background: linear-gradient(to right, var(--mahogany-mid), #1a0803);
+    transform: rotateY(90deg);
+    transform-origin: left center;
+    border-radius: 0 4px 4px 0;
+    box-shadow: inset -3px 0 6px rgba(0,0,0,0.5);
+  }
+
+  .clock-side-left {
+    position: absolute;
+    top: 8px; left: -18px;
+    width: 18px;
+    height: calc(100% - 16px);
+    background: linear-gradient(to left, var(--mahogany-mid), #1a0803);
+    transform: rotateY(-90deg);
+    transform-origin: right center;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .clock-top {
+    position: absolute;
+    top: -14px; left: 8px; right: 8px;
+    height: 14px;
+    background: linear-gradient(to bottom, var(--mahogany-light), var(--mahogany));
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    transform: rotateX(90deg);
+    transform-origin: bottom center;
+    border-top: 2px solid var(--gold-dark);
+  }
+
+  /* BELLS on top */
+  .bells {
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 18px;
+    align-items: flex-end;
+    z-index: 10;
+  }
+
+  .bell {
+    width: 54px;
+    height: 54px;
+    position: relative;
+  }
+
+  .bell-dome {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at 35% 25%, var(--gold-light) 0%, var(--gold) 40%, var(--gold-dark) 80%, #5a3c00 100%);
+    border-radius: 50% 50% 30% 30%;
+    box-shadow:
+      inset 2px 3px 6px rgba(255,255,200,0.3),
+      inset -2px -3px 8px rgba(0,0,0,0.4),
+      0 4px 12px rgba(0,0,0,0.6),
+      0 0 0 2px var(--gold-dark);
+    animation: bell-shine 3s ease-in-out infinite;
+  }
+
+  @keyframes bell-shine {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.08); }
+  }
+
+  .bell-dome::after {
+    content: '';
+    position: absolute;
+    top: 8px; left: 12px;
+    width: 14px; height: 10px;
+    background: rgba(255,255,200,0.25);
+    border-radius: 50%;
+    transform: rotate(-20deg);
+  }
+
+  .bell-stem {
+    width: 8px;
+    height: 12px;
+    background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+    margin: 0 auto;
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    top: -2px;
+  }
+
+  /* HAMMER in middle */
+  .hammer-container {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+  }
+
+  .hammer {
+    width: 10px;
+    height: 36px;
+    background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+    margin: 0 auto;
+    border-radius: 3px;
+    position: relative;
+    transform-origin: bottom center;
+    animation: hammer-rest 1s ease-in-out infinite paused;
+  }
+
+  .hammer.ringing {
+    animation: hammer-ring 0.12s ease-in-out infinite;
+  }
+
+  @keyframes hammer-ring {
+    0%, 100% { transform: rotate(-25deg); }
+    50% { transform: rotate(25deg); }
+  }
+
+  .hammer-head {
+    position: absolute;
+    top: -5px; left: -6px;
+    width: 22px; height: 12px;
+    background: radial-gradient(ellipse at 40% 30%, var(--gold-light), var(--gold-dark));
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  /* CLOCK FACE */
+  .clock-face-container {
+    position: absolute;
+    top: 38px; left: 26px; right: 26px;
+    height: 200px;
+  }
+
+  .clock-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: 
+      radial-gradient(ellipse at 35% 30%, #fefbf0 0%, var(--ivory) 30%, #f0e8d0 70%, #e8dcc0 100%);
+    border: 4px solid var(--gold);
+    box-shadow:
+      inset 0 2px 8px rgba(0,0,0,0.15),
+      inset 0 -2px 4px rgba(255,240,200,0.3),
+      0 0 0 2px var(--gold-dark),
+      0 0 0 5px var(--mahogany),
+      0 0 0 7px var(--gold-dark),
+      4px 6px 20px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Face paper texture */
+  .clock-face::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23paper)' opacity='0.04'/%3E%3C/svg%3E");
+    border-radius: 50%;
+  }
+
+  /* Subtle floral decoration on face */
+  .clock-face::after {
+    content: '✿';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    color: rgba(180, 140, 80, 0.06);
+    pointer-events: none;
+  }
+
+  .face-inner {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(180,140,60,0.3);
+  }
+
+  /* Roman numerals / hour markers */
+  .hour-marker {
+    position: absolute;
+    top: 50%; left: 50%;
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    color: #3a2508;
+    font-weight: 700;
+    transform-origin: 0 0;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(255,240,200,0.5);
+  }
+
+  /* Tick marks */
+  .tick {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 2px;
+    background: var(--gold-dark);
+    transform-origin: bottom center;
+    border-radius: 1px;
+  }
+
+  .tick.major { height: 10px; width: 2px; background: var(--gold-dark); }
+  .tick.minor { height: 5px; width: 1px; background: rgba(139,105,20,0.5); }
+
+  /* HANDS */
+  .hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom center;
+    transform: translateX(-50%);
+    border-radius: 4px 4px 2px 2px;
+  }
+
+  .hour-hand {
+    width: 5px;
+    height: 52px;
+    background: linear-gradient(to top, #1a0803, var(--mahogany) 60%, var(--mahogany-light));
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    border-radius: 3px 3px 2px 2px;
+  }
+
+  .hour-hand::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; left: 50%;
+    transform: translateX(-50%);
+    width: 12px; height: 12px;
+    background: var(--mahogany-light);
+    border-radius: 50%;
+  }
+
+  .minute-hand {
+    width: 3px;
+    height: 72px;
+    background: linear-gradient(to top, #1a0803, var(--mahogany-mid) 50%, #8b4020);
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    border-radius: 2px 2px 1px 1px;
+  }
+
+  .second-hand {
+    width: 1.5px;
+    height: 78px;
+    background: linear-gradient(to top, var(--rose), #e86040);
+    box-shadow: 0 0 3px rgba(200,80,60,0.4);
+    border-radius: 1px;
+  }
+
+  .second-hand::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+    width: 1.5px; height: 22px;
+    background: var(--rose);
+    border-radius: 1px;
+  }
+
+  /* Center cap */
+  .center-cap {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px;
+    background: radial-gradient(circle at 40% 35%, var(--gold-light), var(--gold-dark));
+    border-radius: 50%;
+    z-index: 20;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,200,0.4);
+  }
+
+  /* BRAND TEXT */
+  .brand-text {
+    position: absolute;
+    top: 32%;
+    width: 100%;
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: rgba(80,50,15,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* BOTTOM SECTION - controls */
+  .clock-bottom {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    z-index: 10;
+  }
+
+  /* Winding knobs */
+  .knob {
+    width: 22px;
+    height: 22px;
+    background: radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 50%, var(--gold-dark) 90%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow:
+      inset 1px 2px 4px rgba(255,255,200,0.35),
+      inset -1px -2px 4px rgba(0,0,0,0.35),
+      0 3px 8px rgba(0,0,0,0.5),
+      0 0 0 2px var(--gold-dark);
+    transition: transform 0.15s;
+    position: relative;
+  }
+
+  .knob::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,255,200,0.3), transparent);
+    border: 1px solid rgba(255,220,100,0.2);
+  }
+
+  .knob:active { transform: scale(0.93) rotate(30deg); }
+
+  .knob-label {
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    color: rgba(201,168,76,0.6);
+    white-space: nowrap;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    letter-spacing: 0.5px;
+  }
+
+  /* ALARM DISPLAY */
+  .alarm-display {
+    position: absolute;
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20,8,2,0.7);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-family: 'Crimson Text', serif;
+    font-size: 10px;
+    color: var(--gold);
+    white-space: nowrap;
+    letter-spacing: 1px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  /* FEET */
+  .feet {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+    margin-top: -6px;
+    position: relative;
+    z-index: 5;
+  }
+
+  .foot {
+    width: 36px;
+    height: 16px;
+    background: radial-gradient(ellipse at 50% 20%, var(--mahogany-light), var(--mahogany) 60%, #1a0803);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5), 0 0 0 1px var(--gold-dark);
+    position: relative;
+  }
+
+  .foot::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 4px;
+    background: var(--gold-dark);
+    border-radius: 0 0 50% 50%;
+    opacity: 0.6;
+  }
+
+  /* ALARM MODAL */
+  .alarm-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+
+  .alarm-modal.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .alarm-card {
+    background: radial-gradient(ellipse at 30% 20%, var(--mahogany-light), var(--mahogany) 60%);
+    border: 3px solid var(--gold);
+    border-radius: 12px;
+    padding: 28px 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px var(--gold-dark);
+    animation: alarm-pulse 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes alarm-pulse {
+    from { box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(201,168,76,0.2); }
+    to   { box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 50px rgba(201,168,76,0.5); }
+  }
+
+  .alarm-card h2 {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 22px;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .alarm-card p {
+    color: var(--cream);
+    font-size: 14px;
+    margin-bottom: 20px;
+    font-style: italic;
+    opacity: 0.8;
+  }
+
+  .dismiss-btn {
+    background: linear-gradient(to bottom, var(--gold-light), var(--gold-dark));
+    color: var(--mahogany);
+    border: none;
+    padding: 10px 28px;
+    border-radius: 6px;
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    transition: transform 0.1s, filter 0.1s;
+  }
+
+  .dismiss-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .dismiss-btn:active { transform: translateY(1px); }
+
+  /* ALARM SETTER */
+  .alarm-setter {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+    position: relative;
+  }
+
+  .setter-label {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: rgba(201,168,76,0.7);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .setter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .time-input {
+    background: rgba(20,8,2,0.8);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    text-align: center;
+    width: 60px;
+    padding: 4px 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .time-input:focus { border-color: var(--gold); }
+  .time-input::placeholder { color: rgba(201,168,76,0.3); }
+
+  .time-sep {
+    color: var(--gold);
+    font-size: 22px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .set-alarm-btn {
+    background: linear-gradient(to bottom, var(--gold-light), var(--gold-dark));
+    color: var(--mahogany);
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: filter 0.1s;
+    text-transform: uppercase;
+  }
+
+  .set-alarm-btn:hover { filter: brightness(1.1); }
+
+  /* Glow on body during alarm */
+  .clock-wrapper.alarming .clock-front {
+    animation: alarm-glow 0.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes alarm-glow {
+    from { box-shadow: inset 2px 3px 8px rgba(255,220,120,0.15), inset -2px -3px 10px rgba(0,0,0,0.5); }
+    to   { box-shadow: inset 2px 3px 8px rgba(255,220,120,0.15), inset -2px -3px 10px rgba(0,0,0,0.5), 0 0 40px rgba(201,168,76,0.4); }
+  }
+
+  /* Reflective table surface */
+  .table-reflection {
+    width: 340px;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(201,168,76,0.08), transparent);
+    margin-top: 2px;
+    filter: blur(4px);
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<div class="alarm-modal" id="alarmModal">
+  <div class="alarm-card">
+    <h2>⏰ Rise & Shine!</h2>
+    <p>Your morning alarm is ringing, dear.</p>
+    <button class="dismiss-btn" onclick="dismissAlarm()">Silence the Clock</button>
+  </div>
+</div>
+
+<div class="scene">
+  <div class="clock-wrapper" id="clockWrapper">
+
+    <!-- Bells -->
+    <div class="bells">
+      <div class="bell">
+        <div class="bell-stem"></div>
+        <div class="bell-dome"></div>
+      </div>
+      <div class="hammer-container">
+        <div class="hammer" id="hammer">
+          <div class="hammer-head"></div>
+        </div>
+      </div>
+      <div class="bell">
+        <div class="bell-stem"></div>
+        <div class="bell-dome"></div>
+      </div>
+    </div>
+
+    <!-- Clock Body -->
+    <div class="clock-body">
+      <div class="clock-front">
+        <!-- Clock Face -->
+        <div class="clock-face-container">
+          <div class="clock-face" id="clockFace">
+            <div class="face-inner"></div>
+            <div class="brand-text">Grandmère</div>
+
+            <!-- Hour markers drawn by JS -->
+            <div id="markers"></div>
+
+            <!-- Hands -->
+            <div class="hand hour-hand"   id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+            <div class="hand second-hand" id="secondHand"></div>
+
+            <div class="center-cap"></div>
+          </div>
+        </div>
+
+        <!-- Alarm display -->
+        <div class="alarm-display" id="alarmDisplay">Alarm: --:--</div>
+
+        <!-- Bottom knobs -->
+        <div class="clock-bottom">
+          <div class="knob" title="Wind" style="position:relative">
+            <span class="knob-label">Wind</span>
+          </div>
+          <div class="knob" title="Set Alarm" style="position:relative">
+            <span class="knob-label">Set</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="clock-side-right"></div>
+      <div class="clock-side-left"></div>
+      <div class="clock-top"></div>
+    </div>
+
+    <!-- Feet -->
+    <div class="feet">
+      <div class="foot"></div>
+      <div class="foot"></div>
+    </div>
+  </div>
+
+  <!-- Table reflection -->
+  <div class="table-reflection"></div>
+
+  <!-- Alarm setter UI -->
+  <div class="alarm-setter">
+    <div class="setter-label">✦ Set Alarm ✦</div>
+    <div class="setter-row">
+      <input class="time-input" type="number" id="alarmHour"   min="0" max="23" placeholder="HH">
+      <span class="time-sep">:</span>
+      <input class="time-input" type="number" id="alarmMinute" min="0" max="59" placeholder="MM">
+      <button class="set-alarm-btn" onclick="setAlarm()">Set</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ROMAN = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+
+  // Draw hour markers
+  (function buildMarkers() {
+    const face = document.getElementById('markers');
+    const r = 78; // radius for numerals (px from center, face is ~100px radius inner)
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      const el = document.createElement('span');
+      el.className = 'hour-marker';
+      el.textContent = ROMAN[i];
+      el.style.cssText = `
+        left: calc(50% + ${x}px);
+        top: calc(50% + ${y}px);
+        transform: translate(-50%, -50%);
+        position: absolute;
+      `;
+      face.appendChild(el);
+    }
+
+    // Minor tick marks
+    for (let i = 0; i < 60; i++) {
+      if (i % 5 === 0) continue;
+      const angle = (i / 60) * 360;
+      const tick = document.createElement('div');
+      tick.className = 'tick minor';
+      tick.style.cssText = `
+        transform: translateX(-50%) rotate(${angle}deg) translateY(-82px);
+      `;
+      face.appendChild(tick);
+    }
+
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * 360;
+      const tick = document.createElement('div');
+      tick.className = 'tick major';
+      tick.style.cssText = `
+        transform: translateX(-50%) rotate(${angle}deg) translateY(-82px);
+      `;
+      face.appendChild(tick);
+    }
+  })();
+
+  // Clock state
+  let alarmTime = null;
+  let alarmTriggered = false;
+  let alarmRinging = false;
+
+  function updateClock() {
+    const now = new Date();
+    const s = now.getSeconds() + now.getMilliseconds() / 1000;
+    const m = now.getMinutes() + s / 60;
+    const h = (now.getHours() % 12) + m / 60;
+
+    const sDeg = s * 6;
+    const mDeg = m * 6;
+    const hDeg = h * 30;
+
+    document.getElementById('secondHand').style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+    document.getElementById('minuteHand').style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+    document.getElementById('hourHand').style.transform  = `translateX(-50%) rotate(${hDeg}deg)`;
+
+    // Check alarm
+    if (alarmTime && !alarmTriggered) {
+      const [ah, am] = alarmTime;
+      if (now.getHours() === ah && now.getMinutes() === am && now.getSeconds() === 0) {
+        triggerAlarm();
+      }
+    }
+  }
+
+  function setAlarm() {
+    const h = parseInt(document.getElementById('alarmHour').value);
+    const m = parseInt(document.getElementById('alarmMinute').value);
+    if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+      document.getElementById('alarmDisplay').textContent = 'Alarm: invalid';
+      return;
+    }
+    alarmTime = [h, m];
+    alarmTriggered = false;
+    const hStr = String(h).padStart(2,'0');
+    const mStr = String(m).padStart(2,'0');
+    document.getElementById('alarmDisplay').textContent = `Alarm: ${hStr}:${mStr}`;
+  }
+
+  function triggerAlarm() {
+    alarmTriggered = true;
+    alarmRinging = true;
+    document.getElementById('alarmModal').classList.add('active');
+    document.getElementById('clockWrapper').classList.add('alarming');
+    document.getElementById('hammer').classList.add('ringing');
+
+    // Rattle body
+    document.getElementById('clockWrapper').style.animation = 'none';
+  }
+
+  function dismissAlarm() {
+    alarmRinging = false;
+    document.getElementById('alarmModal').classList.remove('active');
+    document.getElementById('clockWrapper').classList.remove('alarming');
+    document.getElementById('hammer').classList.remove('ringing');
+    document.getElementById('clockWrapper').style.animation = '';
+    alarmTime = null;
+    document.getElementById('alarmDisplay').textContent = 'Alarm: --:--';
+    document.getElementById('alarmHour').value = '';
+    document.getElementById('alarmMinute').value = '';
+  }
+
+  setInterval(updateClock, 50);
+  updateClock();
+</script>
+</body>
+</html>
