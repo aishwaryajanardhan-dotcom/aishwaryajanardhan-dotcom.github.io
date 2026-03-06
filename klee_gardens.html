@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Southern (Tunisian) Gardens — Paul Klee</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1510;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  /* ── Heading block ── */
+  .painting-header {
+    width: 480px;
+    max-width: 100%;
+    margin-bottom: 14px;
+    text-align: center;
+    position: relative;
+  }
+
+  .painting-header::before,
+  .painting-header::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #8b6c2e, #d4a53a, #8b6c2e, transparent);
+    margin: 10px 0;
+  }
+
+  .title-label {
+    font-family: 'IM Fell English SC', 'Cormorant Garamond', serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: #7a6040;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .painting-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    font-style: italic;
+    color: #e8d49a;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+    text-shadow: 0 2px 18px rgba(200,160,50,0.18);
+  }
+
+  .painting-meta {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: #8a7050;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  /* ── Canvas wrapper ── */
+  #canvas-wrapper canvas {
+    display: block;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="painting-header">
+  <div class="title-label">Paul Klee · 1919 · Watercolour &amp; Oil Transfer</div>
+  <div class="painting-title">Southern (Tunisian) Gardens</div>
+  <div class="painting-meta">Südliche Gärten &nbsp;·&nbsp; Städtische Galerie im Lenbachhaus, Munich</div>
+</div>
+
+<div id="canvas-wrapper"></div>
+
+<script>
+var CW = 480, CH = 520;
+
+var REGIONS = [
+  { name:"Crimson Canopies",      desc:"The bold red masses in the upper corners evoke pomegranate trees or\ndate palms seen from a rooftop. After his 1914 Tunisia trip, Klee wrote:\n\"Colour and I are one. I am a painter.\"",                                                                          x:0,   y:0,   w:125, h:115 },
+  { name:"Crimson Canopies",      desc:"The bold red masses in the upper corners evoke pomegranate trees or\ndate palms seen from a rooftop. After his 1914 Tunisia trip, Klee wrote:\n\"Colour and I are one. I am a painter.\"",                                                                          x:345, y:0,   w:135, h:118 },
+  { name:"Rooftop Silhouettes",   desc:"Stark black triangles and trapezoids compress the geometry of a Tunisian\nmedina — rooftops, arches, doorways — into flat symbolic notation.\nKlee strips architecture to its essential silhouette.",                                                            x:22,  y:62,  w:115, h:88  },
+  { name:"Rooftop Silhouettes",   desc:"Stark black triangles and trapezoids compress the geometry of a Tunisian\nmedina — rooftops, arches, doorways — into flat symbolic notation.\nKlee strips architecture to its essential silhouette.",                                                            x:338, y:52,  w:118, h:82  },
+  { name:"The Courtyard Pool",    desc:"This large teal rectangle is the painting's visual anchor — a serene\nreflective pool or open courtyard. Its cool blue-green creates breathing\nspace amid the mosaic's warmth.",                                                                                   x:155, y:195, w:122, h:135 },
+  { name:"Agave in a Black Pot",  desc:"A spiky agave or aloe erupts from a black pot at centre. Its jagged\nradiating leaves punctuate the orderly colour grid like a living\nexclamation mark — one of only two representational elements.",                                                           x:168, y:150, w:108, h:108 },
+  { name:"Second Garden Plant",   desc:"A quieter grey-green plant sits lower-right. Together, the two potted\nplants justify the title: 'gardens.' They anchor botanical life within\nthe otherwise abstract mosaic of coloured light.",                                                                  x:292, y:298, w:118, h:108 },
+  { name:"The Colour Mosaic",     desc:"Dozens of overlapping rectangular patches — pink, yellow, lavender,\norange, teal, sage — tile the canvas like a stained-glass window.\nEach block is irregular; the hand of the watercolourist always shows.",                                                x:115, y:138, w:250, h:265 },
+  { name:"Sandy Desert Ground",   desc:"The pale yellow expanse at the left edge recalls desert terrain around\na Tunisian oasis town. Klee leaves it loosely washed, almost bare —\nthe raw paper breathes here, suggesting heat and distance.",                                                          x:0,   y:225, w:138, h:205 },
+  { name:"Terracotta Borders",    desc:"Deep red-orange washes anchor the lower corners in earthen warmth.\nThese terracotta tones echo the sun-baked clay of North African soil\nand architecture — land and building share the same pigment.",                                                          x:0,   y:428, w:210, h:92  },
+  { name:"Lavender Passages",     desc:"Clusters of lilac and mauve tiles drift across the right half — the\ncolours of Tunisian late afternoon, when shadows turn whitewashed walls\nviolet. Purple here is temperature, not shadow.",                                                                    x:325, y:175, w:155, h:225 },
+  { name:"Klee's Signature",      desc:"Klee signed many works directly on the picture surface — not in a\nmargin, but woven into the composition. His name becomes a final\nbrushstroke, part of the painting rather than a label.",                                                                     x:0,   y:458, w:135, h:62  }
+];
+
+var PAL = [
+  [195,80,75],  [215,165,75], [95,170,188], [178,138,188],
+  [205,118,72], [128,172,108],[222,175,162],[88,122,158],
+  [200,192,128],[118,75,128], [158,192,172],[192,148,128],
+  [68,148,155], [190,80,55],  [208,188,158],[78,92,118],
+  [168,128,72], [148,98,88],  [218,200,120],[140,185,158]
+];
+
+var tiles = [];
+(function () {
+  var s = 98765;
+  function rnd() { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }
+  var cols = 14, rows = 17;
+  var bw = CW / cols, bh = CH / rows;
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      tiles.push({
+        x:  c * bw + (rnd() - 0.5) * bw * 0.38,
+        y:  r * bh + (rnd() - 0.5) * bh * 0.38,
+        w:  bw * (0.68 + rnd() * 0.48),
+        h:  bh * (0.68 + rnd() * 0.48),
+        ci: Math.floor(rnd() * PAL.length),
+        al: 142 + Math.floor(rnd() * 90)
+      });
+    }
+  }
+})();
+
+var activeRegion = null;
+var pinned       = false;
+
+// ── Increased panel height ────────────────────────────────────────
+var PANEL_H = 140;
+
+function hitTest(mx, my) {
+  for (var i = REGIONS.length - 1; i >= 0; i--) {
+    var z = REGIONS[i];
+    if (mx >= z.x && mx <= z.x + z.w && my >= z.y && my <= z.y + z.h)
+      return REGIONS[i];
+  }
+  return null;
+}
+
+new p5(function(p) {
+
+  p.setup = function() {
+    var cnv = p.createCanvas(CW, CH + PANEL_H);
+    cnv.parent('canvas-wrapper');
+    p.pixelDensity(1);
+    p.noLoop();
+    p.cursor(p.CROSS);
+  };
+
+  p.draw = function() {
+    p.background(232, 222, 204);
+
+    p.noStroke();
+    for (var i = 0; i < tiles.length; i++) {
+      var t   = tiles[i];
+      var col = PAL[t.ci];
+      var hl  = false;
+      if (activeRegion) {
+        var cx = t.x + t.w * 0.5, cy = t.y + t.h * 0.5;
+        var z  = activeRegion;
+        hl = (cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h);
+      }
+      p.fill(col[0], col[1], col[2], hl ? Math.min(255, t.al + 55) : t.al);
+      p.beginShape();
+      p.vertex(t.x + 2,       t.y);
+      p.vertex(t.x + t.w - 1, t.y + 1);
+      p.vertex(t.x + t.w,     t.y + t.h - 1);
+      p.vertex(t.x + 1,       t.y + t.h);
+      p.endShape(p.CLOSE);
+      p.fill(255, 255, 255, hl ? 22 : 8);
+      p.rect(t.x + 2, t.y + 2, t.w * 0.38, t.h * 0.28);
+    }
+
+    p.noStroke();
+    p.fill(50, 126, 145, 208);
+    p.rect(158, 198, 120, 134, 2);
+    p.fill(255, 255, 255, 14);
+    p.rect(163, 203, 54, 44);
+
+    p.noStroke();
+    p.fill(172, 44, 34, 215); p.ellipse(62,  32, 120, 96);
+    p.fill(145, 28, 24, 178); p.ellipse(38,  52,  74, 64);
+    p.fill(195, 56, 38, 135); p.ellipse(88,  18,  62, 50);
+    p.fill(175, 46, 36, 215); p.ellipse(400, 38, 128,100);
+    p.fill(148, 30, 26, 178); p.ellipse(434, 56,  80, 70);
+    p.fill(192, 56, 40, 132); p.ellipse(368, 20,  66, 52);
+
+    p.noStroke();
+    p.fill(15, 13, 11, 240);
+    p.triangle(40, 108,  78,  66, 118, 108); p.rect(48, 107, 62, 22);
+    p.ellipse(213, 80, 32, 26);
+    p.triangle(342, 95, 386, 58, 430, 95);  p.rect(350, 94, 72, 18);
+    p.fill(15, 13, 11, 195);
+    p.rect(295, 192, 20, 20, 1);
+    p.ellipse(136, 186, 18, 15);
+
+    p.noStroke();
+    p.fill(15, 13, 11, 250);
+    p.rect(198, 250, 32, 26, 2);
+    drawLeaves(p, 214, 250, 43, [30, 95, 108], [-112,-97,-82,-67,-52,-123,-42]);
+
+    p.fill(15, 13, 11, 250);
+    p.rect(308, 348, 30, 23, 2);
+    drawLeaves(p, 323, 348, 38, [70, 96, 76], [-113,-98,-83,-68,-53,-124,-43]);
+
+    p.noStroke();
+    p.fill(30, 22, 14, 218);
+    p.textFont('Georgia');
+    p.textStyle(p.ITALIC);
+    p.textSize(16);
+    p.text('Klee', 16, CH - 16);
+
+    if (activeRegion) {
+      p.push();
+      p.noFill();
+      p.stroke(255, 232, 130, pinned ? 230 : 175);
+      p.strokeWeight(pinned ? 2.4 : 1.7);
+      if (!pinned) p.drawingContext.setLineDash([7, 4]);
+      p.rect(activeRegion.x, activeRegion.y, activeRegion.w, activeRegion.h, 2);
+      p.drawingContext.setLineDash([]);
+      p.noStroke();
+      p.fill(12, 8, 4, 220);
+      p.textFont('monospace');
+      p.textStyle(p.NORMAL);
+      p.textSize(9);
+      var lw = p.textWidth(activeRegion.name) + 12;
+      var lx = activeRegion.x + 5, ly = activeRegion.y + 5;
+      p.rect(lx, ly, lw, 15, 2);
+      p.fill(240, 208, 125);
+      p.text(activeRegion.name, lx + 6, ly + 11);
+      p.pop();
+    }
+
+    p.noStroke();
+    for (var g = 0; g < 2800; g++) {
+      p.fill(0, 0, 0, p.random(16));
+      p.rect(p.random(CW), p.random(CH), 1, 1);
+    }
+    for (var g2 = 0; g2 < 900; g2++) {
+      p.fill(255, 248, 232, p.random(18));
+      p.rect(p.random(CW), p.random(CH), 1, 1);
+    }
+
+    var ctx = p.drawingContext;
+    var vg  = ctx.createRadialGradient(CW/2, CH/2, CW*0.22, CW/2, CH/2, CW*0.8);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.22)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, CW, CH);
+
+    drawInfoPanel(p);
+  };
+
+  p.mouseMoved = function() {
+    if (p.mouseY > CH) return;
+    if (!pinned) {
+      activeRegion = hitTest(p.mouseX, p.mouseY);
+      p.redraw();
+    }
+  };
+
+  p.mouseClicked = function() {
+    if (p.mouseY > CH) return;
+    var r = hitTest(p.mouseX, p.mouseY);
+    if (!r) {
+      pinned = false; activeRegion = null;
+    } else if (pinned && activeRegion && r.name === activeRegion.name) {
+      pinned = false;
+    } else {
+      activeRegion = r; pinned = true;
+    }
+    p.redraw();
+  };
+
+  function drawInfoPanel(p) {
+    p.noStroke();
+    p.fill(14, 10, 6, 240);
+    p.rect(0, CH, CW, PANEL_H);
+
+    // Top decorative border
+    p.stroke(80, 60, 28);
+    p.strokeWeight(1);
+    p.line(0, CH, CW, CH);
+
+    // Gold accent line
+    p.stroke(140, 100, 30, 120);
+    p.strokeWeight(1);
+    p.line(14, CH + PANEL_H - 28, CW - 14, CH + PANEL_H - 28);
+    p.noStroke();
+
+    if (activeRegion) {
+      // Title
+      p.fill(240, 195, 80);
+      p.textFont('Georgia');
+      p.textStyle(p.ITALIC);
+      p.textSize(22);
+      p.text(activeRegion.name, 16, CH + 26);
+
+      // Divider dot
+      p.fill(140, 100, 30, 160);
+      p.ellipse(16 + p.textWidth(activeRegion.name) + 10, CH + 21, 3, 3);
+
+      // Description — now with more room
+      p.fill(175, 155, 118);
+      p.textFont('monospace');
+      p.textStyle(p.NORMAL);
+      p.textSize(11);
+      p.textLeading(17);
+      p.text(activeRegion.desc, 16, CH + 44, CW - 32, 75);
+
+      if (pinned) {
+        p.fill(240, 195, 80, 130);
+        p.textSize(8);
+        p.textFont('monospace');
+        p.text('[ PINNED — click to unpin ]', 16, CH + PANEL_H - 10);
+      }
+    } else {
+      // Default state
+      p.fill(108, 88, 55);
+      p.textFont('Georgia');
+      p.textStyle(p.ITALIC);
+      p.textSize(13);
+      p.text('Southern (Tunisian) Gardens  ·  Paul Klee  ·  1919', 16, CH + 22);
+
+      p.fill(85, 70, 44);
+      p.textFont('monospace');
+      p.textStyle(p.NORMAL);
+      p.textSize(10);
+      p.textLeading(16);
+      p.text(
+        'After his 1914 trip to Tunisia, Klee wrote: "Colour and I are one.\nI am a painter." This mosaic of light and geometry is the fruit\nof that revelation. Hover over any region to explore — click to pin.',
+        16, CH + 42, CW - 32, 72
+      );
+
+      // Subtle instruction hint at bottom
+      p.fill(60, 48, 30, 200);
+      p.textSize(8);
+      p.text('12 annotated regions', 16, CH + PANEL_H - 10);
+    }
+  }
+
+  function drawLeaves(p, cx, base, len, rgb, angles) {
+    for (var i = 0; i < angles.length; i++) {
+      var rad = angles[i] * Math.PI / 180;
+      var lx  = cx + Math.cos(rad) * len;
+      var ly  = base + Math.sin(rad) * len;
+      p.stroke(rgb[0], rgb[1], rgb[2], 218);
+      p.strokeWeight(1.7);
+      p.line(cx, base, lx, ly);
+      p.noStroke();
+      p.fill(rgb[0], rgb[1], rgb[2], 182);
+      p.ellipse(lx, ly, 7, 11);
+    }
+    p.noStroke();
+  }
+
+});
+</script>
+</body>
+</html>
